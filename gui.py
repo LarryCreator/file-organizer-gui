@@ -61,6 +61,36 @@ class SettingsFrame(customtkinter.CTkFrame):
         self.titleWidget1.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="ew")
         self.titleWidget2 = customtkinter.CTkLabel(self, text=self.title2, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
         self.titleWidget2.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="ew")
+        self.checkBoxes = []
+        self.radioButtons = []
+        self.setUpCheckBoxes()
+        self.setUpRadioButtons()
+    
+    def setUpCheckBoxes(self):
+        index = 1
+        content = {
+            "videos": ".mp4', '.avi', '.mkv', '.wmv', '.mov', '.webm",
+            'images': '.png, .jpg, .jpeg, .jfif, .gif, .svg, .webp',
+            'documents': '.txt, .docx, .pdf, .csv, .xlsx',
+            'audios': '.mp3, .wav, .aiff, .aac',
+            'others': "All other extensions"
+        }
+        for title in content:
+            checkVar = customtkinter.StringVar(value="on")
+            checkBox = customtkinter.CTkCheckBox(self, text=title.capitalize(), variable=checkVar, onvalue="on", offvalue="off")
+            checkBox.grid(row=index, column=0,padx=10,pady=10,sticky="ew")
+            self.checkBoxes.append(checkBox)
+            index += 1
+    
+    def setUpRadioButtons(self):
+        index = 1
+        content = ["copy files", "move files"]
+        radioVar = customtkinter.IntVar(value=index)
+        for i in range (len(content)):
+            radioButton = customtkinter.CTkRadioButton(self, text=content[i].capitalize(), variable=radioVar, value=index)
+            radioButton.grid(row=index, column=1, padx=10, pady=10, sticky="ew")
+            self.radioButtons.append(radioButton)
+            index += 1
 
 class TargetFolderFrame(customtkinter.CTkFrame):
     def __init__(self, master):
@@ -74,8 +104,11 @@ class TargetFolderFrame(customtkinter.CTkFrame):
         self.title = "Target Folder"
         self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
         self.titleWidget.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew")
-        self.button = customtkinter.CTkButton(self, text="Select Folder", font=("arial", 20), fg_color="#666666")
+        self.button = customtkinter.CTkButton(self, text="Select Folder", font=("arial", 20), fg_color="#666666", command=self.getFolderPath)
         self.button.grid(row=1, column=0, columnspan=3, sticky="nsew",padx=10,pady=10)
+
+    def getFolderPath(self):
+        folderSelected = customtkinter.filedialog.askdirectory(title="Select a folder to be organized")
 
 app = App()
 app.mainloop()
