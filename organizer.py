@@ -10,17 +10,19 @@ organization_folders_and_extensions = {
 }
 
 #functions
-def create_organization_folders(base_dir):
-    for folder in organization_folders_and_extensions:
+def create_organization_folders(base_dir, categories):
+    for folder in categories:
         new_dir = base_dir / folder
         new_dir.mkdir(parents=True, exist_ok=True)
 
-def get_file_destination(base_dir, item):
+def get_file_destination(base_dir, item, categories):
     suffix = item.suffix.lower()
     for key, value_list in organization_folders_and_extensions.items():
-        if suffix in value_list:
+        if suffix in value_list and key in categories:
             destination = base_dir / key / item.name
             return destination
+        elif suffix in value_list and key not in categories:
+            return None
     destination = base_dir / 'others' / item.name
     return destination
 
@@ -37,32 +39,33 @@ def get_valid_destination(destination):
     return new_destination
             
 
-def move_files(base_dir):
+def move_files(base_dir, categories):
     moved_files = 0
     for item in base_dir.iterdir():
         if item.is_file():
-            desired_destination = get_file_destination(base_dir, item)
-            valid_destination = get_valid_destination(desired_destination)
-            item.rename(valid_destination)
-            print(f"{item.name} -> {valid_destination}")
-            moved_files += 1
+            desired_destination = get_file_destination(base_dir, item, categories)
+            if desired_destination != None:
+                valid_destination = get_valid_destination(desired_destination)
+                item.rename(valid_destination)
+                print(f"{item.name} -> {valid_destination}")
+                moved_files += 1
     return moved_files
 
-def organize_folder(main_dir):
+def organize_folder(main_dir, categories):
     base_dir = Path(main_dir)
-    create_organization_folders(base_dir)
-    moved_files = move_files(base_dir)
+    create_organization_folders(base_dir, categories)
+    moved_files = move_files(base_dir, categories)
     return moved_files
 
-def main():
-    #example C:\Users\USER\Desktop\target_test
-    main_dir = Path(input("Absolute path to folder:\n"))
+def main(folderPath, categories):
+    if len(categories) == 0:
+        return 'categories'
+    if folderPath == None:
+        return 'folder'
+    main_dir = Path(folderPath)
     if main_dir.is_dir():
-        moved_files = organize_folder(main_dir)
+        moved_files = organize_folder(main_dir, categories)
         print(f"Done!\n\nTotal files moved: {moved_files}")
     else:
         print("This directory does not exist!")
-
-#main call
-main()
-        
+   

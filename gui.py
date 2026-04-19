@@ -1,22 +1,37 @@
 import customtkinter
+from organizer import main as organize
+from CTkMessagebox import CTkMessagebox
 
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
+        self.folderPath = None
+        self.operationMode = "move"
+        self.selectedCategories = ['videos', 'documents', 'audios', 'images', 'others']
         self.title("File organizer GUI")
         self.geometry("800x696")
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=5)
         self.grid_rowconfigure(0, weight=1)
 
-        self.mainFrame = MainFrame(self, "File Organizer GUI")
+        self.mainFrame = MainFrame(self, "File Organizer GUI", self)
 
     def button_callback(self):
         print("button pressed")
+    
+    def updateSelectedCategories(self, checkBox):
+        checkBoxName = checkBox.cget("text").lower()
+        if checkBox.get() == 'on':
+            if checkBoxName not in self.selectedCategories:
+                self.selectedCategories.append(checkBoxName)
+        else:
+            if checkBoxName in self.selectedCategories:
+                self.selectedCategories.remove(checkBoxName)
 
 class MainFrame(customtkinter.CTkFrame):
-    def __init__(self, master, title):
+    def __init__(self, master, title, app):
         super().__init__(master)
+        self.app = app
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=5)
         self.grid_rowconfigure(0, weight=0)
@@ -29,9 +44,19 @@ class MainFrame(customtkinter.CTkFrame):
         self.titleWidget = customtkinter.CTkLabel(self, text=title, fg_color="gray30", corner_radius=6, font=("arial", 24, "bold"))
         self.titleWidget.grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="ew")
         self.logsFrame = LogsFrame(self)
-        self.settingsFrame = SettingsFrame(self)
-        self.targetFolderFrame = TargetFolderFrame(self)
-        self.button = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 24, "bold"), fg_color="#315CC8")
+        self.settingsFrame = SettingsFrame(self, app)
+        self.targetFolderFrame = TargetFolderFrame(self, app)
+
+        def organizeFunction(folderPath, selectedCategories):
+            run = organize(folderPath, selectedCategories)
+            if (isinstance(run, str) and run == 'categories'):
+                errorMessage = 'You must select at least one category!!!'
+                CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
+            elif (isinstance(run, str) and run == 'folder'):
+                errorMessage = 'You must select a folder to run the application!!!'
+                CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
+
+        self.button = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 24, "bold"), fg_color="#315CC8", command=lambda: organizeFunction(self.app.folderPath, self.app.selectedCategories))
         self.button.grid(row=4, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
 
 class LogsFrame(customtkinter.CTkFrame):
@@ -44,8 +69,9 @@ class LogsFrame(customtkinter.CTkFrame):
         self.titleWidget.grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 0), sticky="ew")
 
 class SettingsFrame(customtkinter.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master, app):
         super().__init__(master, fg_color="#353535")
+        self.app = app
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid(row=1, column=0, rowspan=2, sticky="nsew", padx=10, pady=10)
@@ -79,12 +105,13 @@ class SettingsFrame(customtkinter.CTkFrame):
             checkVar = customtkinter.StringVar(value="on")
             checkBox = customtkinter.CTkCheckBox(self, text=title.capitalize(), variable=checkVar, onvalue="on", offvalue="off")
             checkBox.grid(row=index, column=0,padx=10,pady=10,sticky="ew")
+            checkBox.configure(command=lambda cb=checkBox: self.app.updateSelectedCategories(cb))
             self.checkBoxes.append(checkBox)
             index += 1
     
     def setUpRadioButtons(self):
         index = 1
-        content = ["copy files", "move files"]
+        content = ["move files", "copy files"]
         radioVar = customtkinter.IntVar(value=index)
         for i in range (len(content)):
             radioButton = customtkinter.CTkRadioButton(self, text=content[i].capitalize(), variable=radioVar, value=index)
@@ -93,8 +120,9 @@ class SettingsFrame(customtkinter.CTkFrame):
             index += 1
 
 class TargetFolderFrame(customtkinter.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master, app):
         super().__init__(master, fg_color="#353535")
+        self.app = app
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
@@ -109,6 +137,7 @@ class TargetFolderFrame(customtkinter.CTkFrame):
 
     def getFolderPath(self):
         folderSelected = customtkinter.filedialog.askdirectory(title="Select a folder to be organized")
+        self.app.folderPath = folderSelected
 
 app = App()
 app.mainloop()
