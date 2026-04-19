@@ -23,8 +23,11 @@ def get_file_destination(base_dir, item, categories):
             return destination
         elif suffix in value_list and key not in categories:
             return None
-    destination = base_dir / 'others' / item.name
-    return destination
+    if 'others' in categories:
+        destination = base_dir / 'others' / item.name
+        return destination
+    else:
+        return None
 
 def get_valid_destination(destination):
     item_name = destination.stem

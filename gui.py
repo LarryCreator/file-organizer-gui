@@ -13,6 +13,7 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=5)
         self.grid_rowconfigure(0, weight=1)
+        self.resizable(False, False)
 
         self.mainFrame = MainFrame(self, "File Organizer GUI", self)
 
@@ -46,18 +47,17 @@ class MainFrame(customtkinter.CTkFrame):
         self.logsFrame = LogsFrame(self)
         self.settingsFrame = SettingsFrame(self, app)
         self.targetFolderFrame = TargetFolderFrame(self, app)
-
-        def organizeFunction(folderPath, selectedCategories):
-            run = organize(folderPath, selectedCategories)
-            if (isinstance(run, str) and run == 'categories'):
-                errorMessage = 'You must select at least one category!!!'
-                CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
-            elif (isinstance(run, str) and run == 'folder'):
-                errorMessage = 'You must select a folder to run the application!!!'
-                CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
-
-        self.button = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 24, "bold"), fg_color="#315CC8", command=lambda: organizeFunction(self.app.folderPath, self.app.selectedCategories))
+        self.button = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 24, "bold"), fg_color="#315CC8", command=self.organizeButtonCommand)
         self.button.grid(row=4, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
+        
+    def organizeButtonCommand(self):
+        run = organize(self.app.folderPath, self.app.selectedCategories)
+        if (isinstance(run, str) and run == 'categories'):
+            errorMessage = 'You must select at least one category!!!'
+            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
+        elif (isinstance(run, str) and run == 'folder'):
+            errorMessage = 'You must select a folder to run the application!!!'
+            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
 
 class LogsFrame(customtkinter.CTkFrame):
     def __init__(self, master):
@@ -127,17 +127,24 @@ class TargetFolderFrame(customtkinter.CTkFrame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
         self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(1, weight=2)
         self.grid(row=3, column=0, sticky="nsew",padx=10,pady=10)
         self.title = "Target Folder"
         self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
         self.titleWidget.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew")
         self.button = customtkinter.CTkButton(self, text="Select Folder", font=("arial", 20), fg_color="#666666", command=self.getFolderPath)
         self.button.grid(row=1, column=0, columnspan=3, sticky="nsew",padx=10,pady=10)
+        self.button.grid_propagate(False)
+
 
     def getFolderPath(self):
         folderSelected = customtkinter.filedialog.askdirectory(title="Select a folder to be organized")
         self.app.folderPath = folderSelected
+        self.showPathOnUI()
+
+    def showPathOnUI(self):
+        if isinstance(self.app.folderPath, str) and self.app.folderPath != '':
+            self.button.configure(text=self.app.folderPath, font=('arial', 12, 'bold'), fg_color="#007180")
 
 app = App()
 app.mainloop()
