@@ -1,6 +1,7 @@
 import customtkinter
 from organizer import main as organize
 from CTkMessagebox import CTkMessagebox
+from datetime import datetime
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -20,17 +21,30 @@ class App(customtkinter.CTk):
     def updateSelectedCategories(self, checkBox):
         checkBoxName = checkBox.cget("text").lower()
         if checkBox.get() == 'on':
+            logMessage = f"Category {checkBoxName.capitalize()} checked"
             if checkBoxName not in self.selectedCategories:
                 self.selectedCategories.append(checkBoxName)
         else:
+            logMessage = f"Category {checkBoxName.capitalize()} unchecked"
             if checkBoxName in self.selectedCategories:
                 self.selectedCategories.remove(checkBoxName)
+
+        self.mainFrame.logsFrame.updateLogs(logMessage)
 
     def updateSelectedOpMode(self, radioButton):
         if radioButton.cget("value") == 1:
             self.operationMode = 'move'
         else:
             self.operationMode = "copy"
+
+        logMessage = f"{self.operationMode.capitalize()} operation mode selected"
+        self.mainFrame.logsFrame.updateLogs(logMessage)
+    
+    def updateFolderPath(self, newPath):
+        self.folderPath = newPath
+        logMessage = f"Target folder path updated: {self.folderPath}"
+        self.mainFrame.logsFrame.updateLogs(logMessage)
+
 
 class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master, title, app):
@@ -62,14 +76,32 @@ class MainFrame(customtkinter.CTkFrame):
             errorMessage = 'You must select a folder to run the application!!!'
             CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
 
-class LogsFrame(customtkinter.CTkFrame):
+class LogsFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master):
-        super().__init__(master, fg_color="#161616")
+        super().__init__(master, fg_color="#161616", orientation="vertical")
         self.title = "Activity Logs"
+        self.defaultLabel = "No activity yet. Configure settings and start organization."
+        self.logs = []
+        self.logColor = "#1AE9D8"
         self.grid_columnconfigure(0, weight=1)
         self.grid(row=1, column=1, rowspan=3, sticky="nsew", padx=10, pady=10)
         self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"))
         self.titleWidget.grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 0), sticky="ew")
+        self.defaultLabelWidget = customtkinter.CTkLabel(self, text=self.defaultLabel, corner_radius=6, font=("arial", 12, "bold"), text_color="gray", anchor='w')
+        self.defaultLabelWidget.grid(row=1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky="ew")
+
+    def updateLogs(self, logMessage):
+        finalLogMessage = f"[{datetime.now().strftime('%H:%M:%S')}] {logMessage}"
+        if len(self.logs) == 0:
+            self.defaultLabelWidget.configure(text=finalLogMessage, text_color=self.logColor)
+        else:
+            newLabel = customtkinter.CTkLabel(self, text=finalLogMessage, corner_radius=6, font=("arial", 12, "bold"), text_color=self.logColor, anchor='w')
+            newLabel.grid(row=len(self.logs)+1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky='ew')
+        self.logs.append(finalLogMessage)
+        self.scrollDown()
+
+    def scrollDown(self):
+        self.after(10, self._parent_canvas.yview_moveto, 1.0)
 
 class SettingsFrame(customtkinter.CTkFrame):
     def __init__(self, master, app):
@@ -143,7 +175,7 @@ class TargetFolderFrame(customtkinter.CTkFrame):
 
     def getFolderPath(self):
         folderSelected = customtkinter.filedialog.askdirectory(title="Select a folder to be organized")
-        self.app.folderPath = folderSelected
+        self.app.updateFolderPath(folderSelected)
         self.showPathOnUI()
 
     def showPathOnUI(self):
