@@ -16,9 +16,6 @@ class App(customtkinter.CTk):
         self.resizable(False, False)
 
         self.mainFrame = MainFrame(self, "File Organizer GUI", self)
-
-    def button_callback(self):
-        print("button pressed")
     
     def updateSelectedCategories(self, checkBox):
         checkBoxName = checkBox.cget("text").lower()
@@ -28,6 +25,12 @@ class App(customtkinter.CTk):
         else:
             if checkBoxName in self.selectedCategories:
                 self.selectedCategories.remove(checkBoxName)
+
+    def updateSelectedOpMode(self, radioButton):
+        if radioButton.cget("value") == 1:
+            self.operationMode = 'move'
+        else:
+            self.operationMode = "copy"
 
 class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master, title, app):
@@ -51,7 +54,7 @@ class MainFrame(customtkinter.CTkFrame):
         self.button.grid(row=4, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
         
     def organizeButtonCommand(self):
-        run = organize(self.app.folderPath, self.app.selectedCategories)
+        run = organize(self.app.folderPath, self.app.selectedCategories, self.app.operationMode)
         if (isinstance(run, str) and run == 'categories'):
             errorMessage = 'You must select at least one category!!!'
             CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
@@ -115,6 +118,7 @@ class SettingsFrame(customtkinter.CTkFrame):
         radioVar = customtkinter.IntVar(value=index)
         for i in range (len(content)):
             radioButton = customtkinter.CTkRadioButton(self, text=content[i].capitalize(), variable=radioVar, value=index)
+            radioButton.configure(command=lambda rb=radioButton:self.app.updateSelectedOpMode(rb))
             radioButton.grid(row=index, column=1, padx=10, pady=10, sticky="ew")
             self.radioButtons.append(radioButton)
             index += 1
