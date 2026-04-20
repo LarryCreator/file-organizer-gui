@@ -67,13 +67,16 @@ class App(customtkinter.CTk):
             CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
             self.mainFrame.logsFrame.updateLogs("Error: No folder selected")
 
+    def exportLogs(self):
+        print("")
+        #to do
+
     def runApplication(self):
         result = organize(self.folderPath, self.selectedCategories, self.operationMode)
         if (result["errors"] != ""):
             self.handleOrganizingErrors(result["errors"])
         else:
             self.displayOrganizingLogs(result["logs"])
-
 
 class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master, title, app):
@@ -84,22 +87,25 @@ class MainFrame(customtkinter.CTkFrame):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=6)
         self.grid_rowconfigure(2, weight=6)
-        self.grid_rowconfigure(3, weight=1)
+        self.grid_rowconfigure(3, weight=0)
         self.grid_rowconfigure(4, weight=0)
-
+        self.grid_rowconfigure(5, weight=0)
         self.grid(row=0, column=0, columnspan=2, sticky="nsew",padx=10, pady=10)
         self.titleWidget = customtkinter.CTkLabel(self, text=title, fg_color="gray30", corner_radius=6, font=("arial", 24, "bold"))
         self.titleWidget.grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 0), sticky="ew")
         self.logsFrame = LogsFrame(self, app)
         self.settingsFrame = SettingsFrame(self, app)
         self.targetFolderFrame = TargetFolderFrame(self, app)
-        self.button = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 24, "bold"), fg_color="#315CC8", command=self.organizeButtonCommand)
-        self.button.grid(row=4, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
-        
+        self.runAppButton = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 20, "bold"), fg_color="#315CC8", command=self.organizeButtonCommand)
+        self.runAppButton.grid(row=5, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
+        self.exportLogsButton = customtkinter.CTkButton(self, text="Export logs", font=("arial", 15, "bold"), fg_color="gray20")
+        self.exportLogsButton.grid(row=4, column=1, sticky="nsew", padx=10, pady=10)
+
     def organizeButtonCommand(self):
         self.app.runApplication()
-
-
+    
+    def exportLogsButtonCommand(self):
+        self.app.exportLogs()
 
 class LogsFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, app):
@@ -188,18 +194,18 @@ class SettingsFrame(customtkinter.CTkFrame):
 
 class TargetFolderFrame(customtkinter.CTkFrame):
     def __init__(self, master, app):
-        super().__init__(master, fg_color="#353535")
+        super().__init__(master, fg_color="gray20")
         self.app = app
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=2)
-        self.grid(row=3, column=0, sticky="nsew",padx=10,pady=10)
+        self.grid(row=3, rowspan=2, column=0, sticky="nsew",padx=10,pady=10)
         self.title = "Target Folder"
         self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
         self.titleWidget.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew")
-        self.button = customtkinter.CTkButton(self, text="Select Folder", font=("arial", 20), fg_color="#666666", command=self.getFolderPath)
+        self.button = customtkinter.CTkButton(self, text="Select Folder", font=("arial", 18), fg_color="gray30", command=self.getFolderPath)
         self.button.grid(row=1, column=0, columnspan=3, sticky="nsew",padx=10,pady=10)
         self.button.grid_propagate(False)
 

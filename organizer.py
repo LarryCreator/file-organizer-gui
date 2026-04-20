@@ -22,7 +22,7 @@ def get_file_destination(base_dir, item, categories):
             destination = base_dir / key / item.name
             return key, destination
         elif suffix in value_list and key not in categories:
-            return None
+            return '', None
     if 'others' in categories:
         destination = base_dir / 'others' / item.name
         return 'others', destination
