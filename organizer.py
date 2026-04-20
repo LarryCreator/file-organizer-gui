@@ -44,6 +44,7 @@ def get_valid_destination(destination):
 
 def organize_files(base_dir, categories, operationMode):
     organized_files = 0
+    logs = {}
     for item in base_dir.iterdir():
         if item.is_file():
             desired_destination = get_file_destination(base_dir, item, categories)
@@ -64,14 +65,15 @@ def organize_folder(main_dir, categories, operationMode):
     return organized_files
 
 def main(folderPath, categories, operationMode):
-    main_dir = Path(folderPath)
+    error = ""
+    logs = []
     if len(categories) == 0:
-        return 'categories'
+        error = "category"
     if folderPath == None:
-        return 'folder'
-    if main_dir.is_dir():
+        error = "folder"
+    if error == "":
+        main_dir = Path(folderPath)
         organized_files = organize_folder(main_dir, categories, operationMode)
         print(f"Done!\n\nTotal files moved: {organized_files}")
-    else:
-        print("This directory does not exist!")
+    return {"errors": error, "logs": logs}
    
