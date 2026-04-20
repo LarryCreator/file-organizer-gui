@@ -20,14 +20,14 @@ def get_file_destination(base_dir, item, categories):
     for key, value_list in organization_folders_and_extensions.items():
         if suffix in value_list and key in categories:
             destination = base_dir / key / item.name
-            return destination
+            return key, destination
         elif suffix in value_list and key not in categories:
             return None
     if 'others' in categories:
         destination = base_dir / 'others' / item.name
-        return destination
+        return 'others', destination
     else:
-        return None
+        return '', None
 
 def get_valid_destination(destination):
     item_name = destination.stem
@@ -43,11 +43,10 @@ def get_valid_destination(destination):
             
 
 def organize_files(base_dir, categories, operationMode):
-    organized_files = 0
     logs = {}
     for item in base_dir.iterdir():
         if item.is_file():
-            desired_destination = get_file_destination(base_dir, item, categories)
+            target_category, desired_destination = get_file_destination(base_dir, item, categories)
             if desired_destination != None:
                 valid_destination = get_valid_destination(desired_destination)
                 if operationMode=='move':
@@ -55,25 +54,33 @@ def organize_files(base_dir, categories, operationMode):
                 else:
                     item.copy(valid_destination)
                 print(f"{item.name} -> {valid_destination}")
-                organized_files += 1
-    return organized_files
+
+                if target_category in logs:
+                    logs[target_category] += 1
+                else:
+                    logs[target_category] = 1
+
+                if "total" in logs:
+                    logs["total"] += 1
+                else:
+                    logs["total"] = 1
+    return logs
 
 def organize_folder(main_dir, categories, operationMode):
     base_dir = Path(main_dir)
     create_organization_folders(base_dir, categories)
-    organized_files = organize_files(base_dir, categories, operationMode)
-    return organized_files
+    logs = organize_files(base_dir, categories, operationMode)
+    return logs
 
 def main(folderPath, categories, operationMode):
     error = ""
-    logs = []
+    logs = None
     if len(categories) == 0:
         error = "category"
     if folderPath == None:
         error = "folder"
     if error == "":
         main_dir = Path(folderPath)
-        organized_files = organize_folder(main_dir, categories, operationMode)
-        print(f"Done!\n\nTotal files moved: {organized_files}")
+        logs = organize_folder(main_dir, categories, operationMode)
     return {"errors": error, "logs": logs}
    

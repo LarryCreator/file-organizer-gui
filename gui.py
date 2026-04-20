@@ -46,15 +46,23 @@ class App(customtkinter.CTk):
         logMessage = f"Folder set: {folderName}"
         self.mainFrame.logsFrame.updateLogs(logMessage, folderLog=True)
 
-    def displayOrganizingLogs(self):
-        print("")
+    def displayOrganizingLogs(self, result):
+        actionWord = "moved" if self.operationMode == "move" else "copied"
+        if len(result) > 0:
+            self.mainFrame.logsFrame.updateLogs("Starting organization...")
+            for key in result.keys():
+                if key != "total":
+                    self.mainFrame.logsFrame.updateLogs(f"{result[key]} files {actionWord} to {key.capitalize()} folder")
+            self.mainFrame.logsFrame.updateLogs(f"{result["total"]} files {actionWord} in total")
+        else:
+            self.mainFrame.logsFrame.updateLogs("Error: Folder has no files")
 
     def handleOrganizingErrors(self, result):
-        if result["errors"] == 'category':
+        if result == 'category':
             errorMessage = 'You must select at least one category!!!'
             self.mainFrame.logsFrame.updateLogs("Error: No category selected")
             CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
-        elif result["errors"] == 'folder':
+        elif result == 'folder':
             errorMessage = 'You must select a folder to run the application!!!'
             CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
             self.mainFrame.logsFrame.updateLogs("Error: No folder selected")
@@ -62,7 +70,10 @@ class App(customtkinter.CTk):
     def runApplication(self):
         result = organize(self.folderPath, self.selectedCategories, self.operationMode)
         if (result["errors"] != ""):
-            self.handleOrganizingErrors(result)
+            self.handleOrganizingErrors(result["errors"])
+        else:
+            self.displayOrganizingLogs(result["logs"])
+
 
 class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master, title, app):
