@@ -1,5 +1,6 @@
 import customtkinter
 from organizer import main as organize
+from organizer import exportLogs
 from CTkMessagebox import CTkMessagebox
 from datetime import datetime
 
@@ -14,6 +15,7 @@ class App(customtkinter.CTk):
         self.operationMode = "move"
         self.selectedCategories = ['videos', 'documents', 'audios', 'images', 'others']
         self.title("File organizer GUI")
+        self.logs = []
         self.geometry("800x696")
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=5)
@@ -78,9 +80,8 @@ class App(customtkinter.CTk):
             CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
             self.mainFrame.logsFrame.updateLogs("Error: No folder selected")
 
-    def exportLogs(self):
-        print("")
-        #to do
+    def enableExportButton(self):
+        self.mainFrame.exportLogsButton.configure(state="normal")
 
     def runApplication(self):
         result = organize(self.folderPath, self.selectedCategories, self.operationMode)
@@ -109,14 +110,23 @@ class MainFrame(customtkinter.CTkFrame):
         self.targetFolderFrame = TargetFolderFrame(self, app)
         self.runAppButton = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 20, "bold"), fg_color="#315CC8", command=self.organizeButtonCommand)
         self.runAppButton.grid(row=5, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
-        self.exportLogsButton = customtkinter.CTkButton(self, text="Export logs", font=("arial", 15, "bold"), fg_color="gray20")
+        self.exportLogsButton = customtkinter.CTkButton(self, text="Export logs", font=("arial", 15, "bold"), fg_color="gray20", command=self.exportLogsButtonCommand, state="disabled")
         self.exportLogsButton.grid(row=4, column=1, sticky="nsew", padx=10, pady=10)
 
     def organizeButtonCommand(self):
         self.app.runApplication()
     
     def exportLogsButtonCommand(self):
-        self.app.exportLogs()
+        folderSelected = customtkinter.filedialog.askdirectory(title="Where do you want to save the log file?")
+        if(folderSelected != ""):
+            fileName = exportLogs(folderSelected, self.app.logs)
+            self.logsFrame.updateLogs("Log export successful")
+            message = f'Log file successfully exported: {fileName}'
+            CTkMessagebox(title="Info", message=message)
+        else:
+            errorMessage = 'You must select a folder to save the log file in!!!'
+            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
+            self.logsFrame.updateLogs("Export error: No folder set")
 
 class LogsFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, app):
@@ -124,7 +134,6 @@ class LogsFrame(customtkinter.CTkScrollableFrame):
         self.app = app
         self.title = "Activity Logs"
         self.defaultLabel = "No activity yet. \nConfigure settings and start organizing!"
-        self.logs = []
         self.logColor = "#1AE9D8"
         self.grid_columnconfigure(0, weight=1)
         self.grid(row=1, column=1, rowspan=3, sticky="nsew", padx=10, pady=10)
@@ -135,17 +144,18 @@ class LogsFrame(customtkinter.CTkScrollableFrame):
 
     def updateLogs(self, logMessage, folderLog=False):
         finalLogMessage = f"[{datetime.now().strftime('%H:%M:%S')}] {logMessage}"
-        if len(self.logs) == 0:
+        if len(self.app.logs) == 0:
             self.defaultLabelWidget.configure(text=finalLogMessage, text_color=self.logColor, anchor='w')
+            self.app.enableExportButton()
         else:
             newLabel = customtkinter.CTkLabel(self, text=finalLogMessage, corner_radius=6, font=("arial", 12, "bold"), text_color=self.logColor, anchor='w')
-            newLabel.grid(row=len(self.logs)+1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky='ew')
+            newLabel.grid(row=len(self.app.logs)+1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky='ew')
             
         if folderLog:
             logWithFullFolderPath = f"[{datetime.now().strftime('%H:%M:%S')}] {logMessage[logMessage.rfind(":"):]}{self.app.folderPath}"
-            self.logs.append(logWithFullFolderPath)
+            self.app.logs.append(logWithFullFolderPath)
         else:
-            self.logs.append(finalLogMessage)
+            self.app.logs.append(finalLogMessage)
         self.scrollDown()
 
     def scrollDown(self):

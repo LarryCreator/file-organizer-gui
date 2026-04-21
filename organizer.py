@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 
 #variables
 organization_folders_and_extensions = {
@@ -71,6 +72,13 @@ def organize_folder(main_dir, categories, operationMode):
     create_organization_folders(base_dir, categories)
     logs = organize_files(base_dir, categories, operationMode)
     return logs
+
+def exportLogs(folderPath, logs):
+    fileName = f"{folderPath}/Logs-{datetime.now().strftime('%H_%M_%S')}.txt"
+    with open(fileName, "w") as logFile:
+        for log in logs:
+            logFile.write(f"{log}\n")
+    return fileName
 
 def main(folderPath, categories, operationMode):
     error = ""
