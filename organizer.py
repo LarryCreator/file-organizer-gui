@@ -54,7 +54,11 @@ def organize_files(base_dir, categories, operationMode):
                     item.move(valid_destination)
                 else:
                     item.copy(valid_destination)
-                print(f"{item.name} -> {valid_destination}")
+                if 'details' in logs:
+                    logs['details'].append(f"{item.name} -> {valid_destination}")
+                else:
+                    logs['details'] = []
+                    logs['details'].append(f"{item.name} -> {valid_destination}")
 
                 if target_category in logs:
                     logs[target_category] += 1
@@ -90,5 +94,6 @@ def main(folderPath, categories, operationMode):
     if error == "":
         main_dir = Path(folderPath)
         logs = organize_folder(main_dir, categories, operationMode)
+    print(logs)
     return {"errors": error, "logs": logs}
    

@@ -63,8 +63,11 @@ class App(customtkinter.CTk):
         actionWord = "moved" if self.operationMode == "move" else "copied"
         if len(result) > 0:
             self.mainFrame.logsFrame.updateLogs("Starting organization...")
+            for detailedLog in result['details']:
+                logMessage = f"[{datetime.now().strftime('%H:%M:%S')}] {detailedLog}"
+                self.logs.append(logMessage)
             for key in result.keys():
-                if key != "total":
+                if key != "total" and key != "details":
                     self.mainFrame.logsFrame.updateLogs(f"{result[key]} files {actionWord} to {key.capitalize()}")
             self.mainFrame.logsFrame.updateLogs(f"{result["total"]} files {actionWord} in total")
         else:
