@@ -70,7 +70,7 @@ py main.py
 ## Screenshots
 
 ### Main interface
-![Main interface](./screenshots/screenshot1.png)
+![Main interface](./screenshots/screenshot.png)
 
 ### Export success
 ![Export success](./screenshots/screenshot2.png)
