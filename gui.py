@@ -1,19 +1,18 @@
 import customtkinter
-from organizer import main as organize
-from organizer import exportLogs
+from organizer import export_logs, run_organization
 from CTkMessagebox import CTkMessagebox
 from datetime import datetime
 
-#TODO WIRE EXPORT LOGS FUNCTIONALITY 
+app_font = 'arial'
 
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.width = 800
         self.height = 696
-        self.folderPath = None
-        self.operationMode = "move"
-        self.selectedCategories = ['videos', 'documents', 'audios', 'images', 'others']
+        self.folder_path = None
+        self.operation_mode = "move"
+        self.selected_categories = ['videos', 'documents', 'audios', 'images', 'others']
         self.title("File organizer GUI")
         self.logs = []
         self.geometry("800x696")
@@ -21,82 +20,96 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(1, weight=5)
         self.grid_rowconfigure(0, weight=1)
         self.resizable(False, False)
-        self.mainFrame = MainFrame(self, "File Organizer GUI", self)
-        self.centerWindow()
+        self.main_frame = MainFrame(self, "File Organizer GUI", self)
+        self.center_window()
 
-    def centerWindow(self):
+    def center_window(self):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width // 2) - (self.width // 2)
         y = (screen_height // 2) - (self.height // 2)
         self.geometry(f'{self.width}x{self.height}+{int(x)}+{int(y)}')
     
-    def updateSelectedCategories(self, checkBox):
-        checkBoxName = checkBox.cget("text").lower()
-        if checkBox.get() == 'on':
-            logMessage = f"Category {checkBoxName.capitalize()} checked"
-            if checkBoxName not in self.selectedCategories:
-                self.selectedCategories.append(checkBoxName)
+    def update_selected_categories(self, checkbox):
+        checkbox_name = checkbox.cget("text").lower()
+        if checkbox.get() == 'on':
+            log_message = f"Category {checkbox_name.capitalize()} checked"
+            if checkbox_name not in self.selected_categories:
+                self.selected_categories.append(checkbox_name)
         else:
-            logMessage = f"Category {checkBoxName.capitalize()} unchecked"
-            if checkBoxName in self.selectedCategories:
-                self.selectedCategories.remove(checkBoxName)
+            log_message = f"Category {checkbox_name.capitalize()} unchecked"
+            if checkbox_name in self.selected_categories:
+                self.selected_categories.remove(checkbox_name)
 
-        self.mainFrame.logsFrame.updateLogs(logMessage)
+        self.main_frame.logs_frame.update_logs(log_message)
 
-    def updateSelectedOpMode(self, radioButton):
-        if radioButton.cget("value") == 1:
-            self.operationMode = 'move'
+    def update_operation_mode(self, radio_button):
+        if radio_button.cget("value") == 1:
+            self.operation_mode = 'move'
         else:
-            self.operationMode = "copy"
+            self.operation_mode = "copy"
 
-        logMessage = f"Mode: {self.operationMode.capitalize()}"
-        self.mainFrame.logsFrame.updateLogs(logMessage)
+        log_message = f"Mode: {self.operation_mode.capitalize()}"
+        self.main_frame.logs_frame.update_logs(log_message)
     
-    def updateFolderPath(self, newPath):
-        self.folderPath = newPath
-        folderName = self.folderPath[self.folderPath.rfind("/")+1:]
-        logMessage = f"Folder set: {folderName}"
-        self.mainFrame.logsFrame.updateLogs(logMessage, folderLog=True)
+    def update_folder_path(self, new_path):
+        self.folder_path = new_path
+        folder_name = self.folder_path[self.folder_path.rfind("/")+1:]
+        log_message = f"Folder set: {folder_name}"
+        self.main_frame.logs_frame.update_logs(log_message, folder_log=True)
 
-    def displayOrganizingLogs(self, result):
-        actionWord = "moved" if self.operationMode == "move" else "copied"
+    def display_organizing_logs(self, result):
+        action_word = "moved" if self.operation_mode == "move" else "copied"
         if len(result) > 0:
-            self.mainFrame.logsFrame.updateLogs("Starting organization...")
-            for detailedLog in result['details']:
-                logMessage = f"[{datetime.now().strftime('%H:%M:%S')}] {detailedLog}"
-                self.logs.append(logMessage)
+            self.main_frame.logs_frame.update_logs("Starting organization...")
+            for detailed_log in result['details']:
+                log_message = f"[{datetime.now().strftime('%H:%M:%S')}] {detailed_log}"
+                self.logs.append(log_message)
             for key in result.keys():
                 if key != "total" and key != "details":
-                    self.mainFrame.logsFrame.updateLogs(f"{result[key]} files {actionWord} to {key.capitalize()}")
-            self.mainFrame.logsFrame.updateLogs(f"{result["total"]} files {actionWord} in total")
+                    self.main_frame.logs_frame.update_logs(f"{result[key]} files {action_word} to {key.capitalize()}")
+            self.main_frame.logs_frame.update_logs(f"{result["total"]} files {action_word} in total")
         else:
-            self.mainFrame.logsFrame.updateLogs("Error: Folder has no files")
+            self.main_frame.logs_frame.update_logs("Error: Folder has no files")
 
-    def handleOrganizingErrors(self, result):
+    def handle_organizing_errors(self, result):
         if result == 'category':
-            errorMessage = 'You must select at least one category!!!'
-            self.mainFrame.logsFrame.updateLogs("Error: No category selected")
-            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
+            error_message = 'You must select at least one category!!!'
+            self.main_frame.logs_frame.update_logs("Error: No category selected")
+            CTkMessagebox(title="Error", message=error_message, icon="cancel")
         elif result == 'folder':
-            errorMessage = 'You must select a folder to run the application!!!'
-            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
-            self.mainFrame.logsFrame.updateLogs("Error: No folder selected")
+            error_message = 'You must select a folder to run the application!!!'
+            CTkMessagebox(title="Error", message=error_message, icon="cancel")
+            self.main_frame.logs_frame.update_logs("Error: No folder selected")
 
-    def enableExportButton(self):
-        self.mainFrame.exportLogsButton.configure(state="normal")
+    def enable_export_button(self):
+        self.main_frame.export_logs_button.configure(state="normal")
 
-    def runApplication(self):
-        result = organize(self.folderPath, self.selectedCategories, self.operationMode)
+    def run_application(self):
+        result = run_organization(self.folder_path, self.selected_categories, self.operation_mode)
         if (result["errors"] != ""):
-            self.handleOrganizingErrors(result["errors"])
+            self.handle_organizing_errors(result["errors"])
         else:
-            self.displayOrganizingLogs(result["logs"])
+            self.display_organizing_logs(result["logs"])
 
 class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master, title, app):
         super().__init__(master)
+        self.setup_layout()
+
         self.app = app
+        self.logs_frame = LogsFrame(self, app)
+        self.settings_frame = SettingsFrame(self, app)
+        self.target_folder_frame = TargetFolderFrame(self, app)
+
+        self.title_widget = customtkinter.CTkLabel(self, text=title, fg_color="gray30", corner_radius=6, font=(app_font, 20, "bold"))
+        self.title_widget.grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 10), sticky="ew")
+        self.run_app_button = customtkinter.CTkButton(self, text="Start Organization", font=(app_font, 20, "bold"), fg_color="#315CC8", command=self.app.run_application)
+        self.run_app_button.grid(row=5, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
+        self.export_logs_button = customtkinter.CTkButton(self, text="Export logs", font=(app_font, 15, "bold"), fg_color="gray20", command=self.export_logs_button_command, state="disabled")
+        self.export_logs_button.grid(row=4, column=1, sticky="nsew", padx=10, pady=10)
+
+    def setup_layout(self):
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=5)
         self.grid_rowconfigure(0, weight=0)
@@ -106,68 +119,75 @@ class MainFrame(customtkinter.CTkFrame):
         self.grid_rowconfigure(4, weight=0)
         self.grid_rowconfigure(5, weight=0)
         self.grid(row=0, column=0, columnspan=2, sticky="nsew",padx=10, pady=10)
-        self.titleWidget = customtkinter.CTkLabel(self, text=title, fg_color="gray30", corner_radius=6, font=("arial", 20, "bold"))
-        self.titleWidget.grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 10), sticky="ew")
-        self.logsFrame = LogsFrame(self, app)
-        self.settingsFrame = SettingsFrame(self, app)
-        self.targetFolderFrame = TargetFolderFrame(self, app)
-        self.runAppButton = customtkinter.CTkButton(self, text="Start Organization", font=("arial", 20, "bold"), fg_color="#315CC8", command=self.organizeButtonCommand)
-        self.runAppButton.grid(row=5, column=0, columnspan=2, sticky="nsew",padx=10,pady=5)
-        self.exportLogsButton = customtkinter.CTkButton(self, text="Export logs", font=("arial", 15, "bold"), fg_color="gray20", command=self.exportLogsButtonCommand, state="disabled")
-        self.exportLogsButton.grid(row=4, column=1, sticky="nsew", padx=10, pady=10)
-
-    def organizeButtonCommand(self):
-        self.app.runApplication()
     
-    def exportLogsButtonCommand(self):
-        folderSelected = customtkinter.filedialog.askdirectory(title="Where do you want to save the log file?")
-        if(folderSelected != ""):
-            fileName = exportLogs(folderSelected, self.app.logs)
-            self.logsFrame.updateLogs("Log export successful")
-            message = f'Log file successfully exported: {fileName}'
+    def export_logs_button_command(self):
+        selected_folder = customtkinter.filedialog.askdirectory(title="Where do you want to save the log file?")
+        if(selected_folder != ""):
+            file_name = export_logs(selected_folder, self.app.logs)
+            self.logs_frame.update_logs("Log export successful")
+            message = f'Log file successfully exported: {file_name}'
             CTkMessagebox(title="Info", message=message)
         else:
-            errorMessage = 'You must select a folder to save the log file in!!!'
-            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
-            self.logsFrame.updateLogs("Export error: No folder set")
+            error_message = 'You must select a folder to save the log file in!!!'
+            CTkMessagebox(title="Error", message=error_message, icon="cancel")
+            self.logs_frame.update_logs("Export error: No folder set")
 
 class LogsFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, app):
         super().__init__(master, fg_color="#161616", orientation="vertical")
         self.app = app
-        self.title = "Activity Logs"
-        self.defaultLabel = "No activity yet. \nConfigure settings and start organizing!"
-        self.logColor = "#1AE9D8"
+
         self.grid_columnconfigure(0, weight=1)
         self.grid(row=1, column=1, rowspan=3, sticky="nsew", padx=10, pady=10)
-        self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"))
-        self.titleWidget.grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 0), sticky="ew")
-        self.defaultLabelWidget = customtkinter.CTkLabel(self, text=self.defaultLabel, corner_radius=6, font=("arial", 12, "bold"), text_color="gray")
-        self.defaultLabelWidget.grid(row=1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky="ew")
 
-    def updateLogs(self, logMessage, folderLog=False):
-        finalLogMessage = f"[{datetime.now().strftime('%H:%M:%S')}] {logMessage}"
+        self.log_text_color = "#1AE9D8"
+        self.title = "Activity Logs"
+        self.default_logs_text = "No activity yet. \nConfigure settings and start organizing!"
+
+        self.title_widget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=(app_font, 17, "bold"))
+        self.default_logs_label_widget = customtkinter.CTkLabel(self, text=self.default_logs_text, corner_radius=6, font=(app_font, 12, "bold"), text_color="gray")
+        self.title_widget.grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 0), sticky="ew")
+        self.default_logs_label_widget.grid(row=1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky="ew")
+
+    def update_logs(self, log_message, folder_log=False):
+        final_log_message = f"[{datetime.now().strftime('%H:%M:%S')}] {log_message}"
         if len(self.app.logs) == 0:
-            self.defaultLabelWidget.configure(text=finalLogMessage, text_color=self.logColor, anchor='w')
-            self.app.enableExportButton()
+            self.default_logs_label_widget.configure(text=final_log_message, text_color=self.log_text_color, anchor='w')
+            self.app.enable_export_button()
         else:
-            newLabel = customtkinter.CTkLabel(self, text=finalLogMessage, corner_radius=6, font=("arial", 12, "bold"), text_color=self.logColor, anchor='w')
-            newLabel.grid(row=len(self.app.logs)+1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky='ew')
+            new_label = customtkinter.CTkLabel(self, text=final_log_message, corner_radius=6, font=(app_font, 12, "bold"), text_color=self.log_text_color, anchor='w')
+            new_label.grid(row=len(self.app.logs)+1, column=0, columnspan=3, padx=10, pady=(1, 0), sticky='ew')
             
-        if folderLog:
-            logWithFullFolderPath = f"[{datetime.now().strftime('%H:%M:%S')}] {logMessage[logMessage.rfind(":"):]}{self.app.folderPath}"
-            self.app.logs.append(logWithFullFolderPath)
+        if folder_log:
+            log_with_full_folder_path = f"[{datetime.now().strftime('%H:%M:%S')}] {log_message[log_message.rfind(":"):]}{self.app.folder_path}"
+            self.app.logs.append(log_with_full_folder_path)
         else:
-            self.app.logs.append(finalLogMessage)
-        self.scrollDown()
+            self.app.logs.append(final_log_message)
+        self.scroll_down()
 
-    def scrollDown(self):
+    def scroll_down(self):
         self.after(10, self._parent_canvas.yview_moveto, 1.0)
 
 class SettingsFrame(customtkinter.CTkFrame):
     def __init__(self, master, app):
         super().__init__(master, fg_color="#353535")
         self.app = app
+        self.radio_buttons = []
+        self.categories_frame = CategoriesFrame(self, self.app)
+
+        self.setup_layout()
+
+        self.first_column_title="Select categories"
+        self.second_column_title="Operation mode"
+        
+        self.first_column_widget = customtkinter.CTkLabel(self, text=self.first_column_title, corner_radius=6, font=(app_font, 17, "bold"), fg_color="#161616")
+        self.second_column_widget = customtkinter.CTkLabel(self, text=self.second_column_title, corner_radius=6, font=(app_font, 17, "bold"), fg_color="#161616")
+        self.first_column_widget.grid(row=0, column=1, padx=10, pady=10 , sticky="ew")
+        self.second_column_widget.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+
+        self.setup_radio_buttons()
+    
+    def setup_layout(self):
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid(row=1, column=0, rowspan=2, sticky="nsew", padx=10)
@@ -182,33 +202,28 @@ class SettingsFrame(customtkinter.CTkFrame):
         self.grid_rowconfigure(8, weight=1)
         self.grid_rowconfigure(9, weight=1)
         self.grid_rowconfigure(10, weight=1)
-        self.categoriesFrame = CategoriesFrame(self, self.app)
 
-        self.title="Operation mode"
-        self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
-        self.titleWidget.grid(row=0, column=1, padx=10, pady=10 , sticky="ew")
-        self.title1="Select categories"
-        self.titleWidget1 = customtkinter.CTkLabel(self, text=self.title1, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
-        self.titleWidget1.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-        self.radioButtons = []
-        self.setUpRadioButtons()
-
-    def setUpRadioButtons(self):
+    def setup_radio_buttons(self):
         index = 1
         content = ["move files", "copy files"]
-        radioVar = customtkinter.IntVar(value=index)
+        radio_var = customtkinter.IntVar(value=index)
         for i in range (len(content)):
-            radioButton = customtkinter.CTkRadioButton(self, text=content[i].capitalize(), variable=radioVar, value=index)
-            radioButton.configure(command=lambda rb=radioButton:self.app.updateSelectedOpMode(rb))
-            radioButton.grid(row=index, column=1, sticky="ew", padx=20)
-            self.radioButtons.append(radioButton)
+            radio_button = customtkinter.CTkRadioButton(self, text=content[i].capitalize(), variable=radio_var, value=index)
+            radio_button.configure(command=lambda rb=radio_button:self.app.update_operation_mode(rb))
+            radio_button.grid(row=index, column=1, sticky="ew", padx=20)
+            self.radio_buttons.append(radio_button)
             index += 1
 
 class CategoriesFrame(customtkinter.CTkFrame):
     def __init__(self, master, app):
         super().__init__(master, fg_color="#353535")
         self.app = app
-        self.checkBoxes = []
+        self.checkboxes = []
+
+        self.setup_layout()
+        self.setup_checkboxes()
+
+    def setup_layout(self):
         self.grid_columnconfigure(0, weight=1)
         self.grid(row=0, column=0, rowspan=10, sticky="nsew", padx=5, pady=(60.2, 0))
         self.grid_rowconfigure(0, weight=0)
@@ -222,9 +237,8 @@ class CategoriesFrame(customtkinter.CTkFrame):
         self.grid_rowconfigure(8, weight=1)
         self.grid_rowconfigure(9, weight=1)
         self.grid_rowconfigure(10, weight=1) 
-        self.setUpCheckBoxes()
-    
-    def setUpCheckBoxes(self):
+
+    def setup_checkboxes(self):
         index = 1
         content = {
             "videos": ".mp4., .avi, .mkv, .wmv, .mov, .webm",
@@ -234,47 +248,49 @@ class CategoriesFrame(customtkinter.CTkFrame):
             'others': "All other extensions"
         }
         for title in content:
-            checkVar = customtkinter.StringVar(value="on")
-            checkBox = customtkinter.CTkCheckBox(self, text=title.capitalize(), variable=checkVar, onvalue="on", offvalue="off")
-            checkBox.grid(row=index, column=0,padx=10,pady=0,sticky="w")
-            checkBox.configure(command=lambda cb=checkBox: self.app.updateSelectedCategories(cb))
-            self.checkBoxes.append(checkBox)
+            check_var = customtkinter.StringVar(value="on")
+            checkbox = customtkinter.CTkCheckBox(self, text=title.capitalize(), variable=check_var, onvalue="on", offvalue="off")
+            checkbox.grid(row=index, column=0,padx=10,pady=0,sticky="w")
+            checkbox.configure(command=lambda cb=checkbox: self.app.update_selected_categories(cb))
+            self.checkboxes.append(checkbox)
 
-            extensionsLabel = customtkinter.CTkLabel(self, text=content[title], corner_radius=6, font=("arial", 12, "bold"), text_color="gray", anchor="w")
-            extensionsLabel.grid(row=index+1, column=0, sticky="w")
+            extensions_label = customtkinter.CTkLabel(self, text=content[title], corner_radius=6, font=(app_font, 12, "bold"), text_color="gray", anchor="w")
+            extensions_label.grid(row=index+1, column=0, sticky="w")
             index += 2
 
 class TargetFolderFrame(customtkinter.CTkFrame):
     def __init__(self, master, app):
         super().__init__(master, fg_color="gray20")
         self.app = app
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=2)
         self.grid(row=3, rowspan=2, column=0, sticky="nsew",padx=10,pady=10)
+
         self.title = "Target Folder"
-        self.titleWidget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=("arial", 17, "bold"), fg_color="#161616")
-        self.titleWidget.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew")
-        self.button = customtkinter.CTkButton(self, text="Select Folder", font=("arial", 18), fg_color="gray30", command=self.getFolderPath)
+
+        self.title_widget = customtkinter.CTkLabel(self, text=self.title, corner_radius=6, font=(app_font, 17, "bold"), fg_color="#161616")
+        self.button = customtkinter.CTkButton(self, text="Select Folder", font=(app_font, 18), fg_color="gray30", command=self.get_folder_path)
+        self.title_widget.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew")
         self.button.grid(row=1, column=0, columnspan=3, sticky="nsew",padx=10,pady=10)
         self.button.grid_propagate(False)
 
-
-    def getFolderPath(self):
-        folderSelected = customtkinter.filedialog.askdirectory(title="Select a folder to be organized")
-        if(folderSelected != ""):
-            self.app.updateFolderPath(folderSelected)
-            self.showPathOnUI()
+    def get_folder_path(self):
+        selected_folder = customtkinter.filedialog.askdirectory(title="Select a folder to be organized")
+        if(selected_folder != ""):
+            self.app.update_folder_path(selected_folder)
+            self.show_path_on_ui()
         else:
-            errorMessage = 'You must select a folder to run the application!!!'
-            CTkMessagebox(title="Error", message=errorMessage, icon="cancel")
-            self.master.logsFrame.updateLogs("Error: No folder selected")
+            error_message = 'You must select a folder to run the application!!!'
+            CTkMessagebox(title="Error", message=error_message, icon="cancel")
+            self.master.logs_frame.update_logs("Error: No folder selected")
 
-    def showPathOnUI(self):
-        if isinstance(self.app.folderPath, str) and self.app.folderPath != '':
-            self.button.configure(text=self.app.folderPath, font=('arial', 12, 'bold'), fg_color="#007180")
+    def show_path_on_ui(self):
+        if isinstance(self.app.folder_path, str) and self.app.folder_path != '':
+            self.button.configure(text=self.app.folder_path, font=('arial', 12, 'bold'), fg_color="#007180")
 
 app = App()
 app.mainloop()
